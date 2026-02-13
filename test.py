@@ -48,4 +48,3 @@ loss.backward()
 
 print(loss.data)
 print(logits.grad)
-

@@ -37,5 +37,6 @@ def load_dataset(root_dir, image_size=(32, 32)):
 
     elapsed = time.time() - start
     print(f"Dataset loading time: {elapsed:.2f} seconds")
+    print(f"Class mapping: {class_map}")
 
     return Tensor(X, requires_grad=False), y
