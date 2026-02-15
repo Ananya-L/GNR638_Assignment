@@ -1,22 +1,17 @@
-# Dataset
-Assignment 1 Datasets/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
 
 # Build files
 build/
+dist/
 *.so
 *.pyd
 *.o
 
-# Model weights
-model.pkl
+# Model files
+*.pkl
 
-# Virtual env
-venv/
+# Dataset
+Assignment 1 Datasets/
 
-# OS files
-.DS_Store
-Thumbs.db
