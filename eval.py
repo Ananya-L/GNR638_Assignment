@@ -2,8 +2,7 @@ import argparse
 import pickle
 import json
 from framework.layers import Conv2D, ReLU, MaxPool2D, Flatten, Linear
-from framework.tensor import Tensor
-from data.loader import load_dataset
+from data.loader import ImageDataset
 
 
 def load_model(params, filepath):
@@ -17,9 +16,10 @@ def load_model(params, filepath):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_path', type=str, default='dataset')
+    parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--config', type=str, default='config.json')
     parser.add_argument('--weights_path', type=str, default='model.pkl')
+    parser.add_argument('--batch_size', type=int, default=32)
     
     args = parser.parse_args()
 
@@ -31,26 +31,20 @@ def main():
         config = {'conv_channels': 16, 'conv_kernel': 3}
 
     print("="*60)
-    print("DATASET LOADING")
+    print("LOADING DATASET")
     print("="*60)
     
-    # Load dataset
-    X_test, y_test = load_dataset(args.dataset_path)
-    num_classes = max(y_test) + 1
-    num_samples = len(y_test)
-    print(f"Number of samples: {num_samples}")
-    print(f"Number of classes detected: {num_classes}")
+    dataset = ImageDataset(args.dataset_path)
+    num_classes = len(dataset.class_map)
     
-    # Force minimum 2 classes to match training
-    if num_classes < 2:
-        print("WARNING: Only 1 class detected. Using 2 classes to match training.")
-        num_classes = 2
+    print(f"Total samples: {len(dataset)}")
+    print(f"Number of classes: {num_classes}")
 
     print("\n" + "="*60)
-    print("MODEL ARCHITECTURE")
+    print("MODEL")
     print("="*60)
 
-    # Build model (must match training exactly)
+    # Build model
     conv_ch = config.get('conv_channels', 16)
     conv_k = config.get('conv_kernel', 3)
     flat_size = conv_ch * 15 * 15
@@ -60,12 +54,6 @@ def main():
     pool = MaxPool2D(2)
     flat = Flatten()
     fc = Linear(flat_size, num_classes)
-
-    print(f"Conv2D: 3 -> {conv_ch} channels, {conv_k}x{conv_k} kernel")
-    print(f"ReLU activation")
-    print(f"MaxPool2D: 2x2 kernel")
-    print(f"Flatten: {conv_ch}x15x15 -> {flat_size} features")
-    print(f"Linear: {flat_size} -> {num_classes} classes")
 
     # Load weights
     params = conv.parameters() + fc.parameters()
@@ -77,27 +65,33 @@ def main():
     print("="*60)
     
     correct = 0
-    total = len(y_test)
+    total = 0
+    batch_count = 0
 
-    for i in range(total):
-        x = Tensor([X_test.data[i]], requires_grad=False)
-
-        out = conv(x)
+    for X_batch, y_batch in dataset.get_batches(args.batch_size):
+        # Forward pass
+        out = conv(X_batch)
         out = relu(out)
         out = pool(out)
         out = flat(out)
         out = fc(out)
 
-        pred = out.data[0].index(max(out.data[0]))
-
-        if pred == y_test[i]:
-            correct += 1
+        # Predictions
+        for i in range(len(y_batch)):
+            if i >= len(out.data):
+                break
+            pred = out.data[i].index(max(out.data[i]))
+            if pred == y_batch[i]:
+                correct += 1
         
-        if (i + 1) % 500 == 0:
-            print(f"Evaluated {i+1}/{total} samples...")
+        total += len(y_batch)
+        batch_count += 1
+        
+        if batch_count % 10 == 0:
+            print(f"Evaluated {total}/{len(dataset)} samples...")
 
     accuracy = correct / total if total > 0 else 0.0
-    print(f"\nFinal Evaluation Accuracy: {accuracy:.4f} ({correct}/{total})")
+    print(f"\nFinal Accuracy: {accuracy:.4f} ({correct}/{total})")
 
 
 if __name__ == '__main__':

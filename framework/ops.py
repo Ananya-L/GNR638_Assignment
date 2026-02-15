@@ -1,7 +1,6 @@
 from .tensor import Tensor
 
 def add(a, b):
-    # Handle list addition
     if isinstance(a.data, list):
         out_data = _add_lists(a.data, b.data)
     else:
@@ -27,7 +26,6 @@ def add(a, b):
 
 
 def mul(a, b):
-    # Handle list multiplication
     if isinstance(a.data, list):
         out_data = _mul_lists(a.data, b.data)
     else:
@@ -55,7 +53,6 @@ def mul(a, b):
 
 
 def matmul(a, b):
-    # a: [m x n], b: [n x k]
     out_data = [
         [
             sum(a.data[i][t] * b.data[t][j] for t in range(len(b.data)))
@@ -98,7 +95,6 @@ def matmul(a, b):
     return out
 
 
-# Helper functions
 def _add_lists(a, b):
     if isinstance(a, list):
         return [_add_lists(x, y) for x, y in zip(a, b)]

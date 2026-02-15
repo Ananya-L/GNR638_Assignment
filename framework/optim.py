@@ -7,12 +7,14 @@ class SGD:
         for p in self.params:
             if p.grad is None:
                 continue
-            for i in range(len(p.data)):
-                if isinstance(p.data[i], list):
-                    for j in range(len(p.data[i])):
-                        p.data[i][j] -= self.lr * p.grad[i][j]
+            
+            def update(data, grad):
+                if isinstance(data, list):
+                    return [update(d, g) for d, g in zip(data, grad)]
                 else:
-                    p.data[i] -= self.lr * p.grad[i]
+                    return data - self.lr * grad
+            
+            p.data = update(p.data, p.grad)
 
     def zero_grad(self):
         for p in self.params:

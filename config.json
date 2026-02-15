@@ -1,5 +1,4 @@
 {
-  "conv_channels": 16,
-  "conv_kernel": 3,
-  "pool_size": 2
+  "conv_channels": 32,
+  "conv_kernel": 3
 }
