@@ -1,6 +1,7 @@
 from .tensor import Tensor
 from .ops import matmul, add
 import random
+import cpp_backend
 
 class Linear:
     def __init__(self, in_features, out_features):
@@ -75,16 +76,10 @@ class Conv2D:
         out_h = H - k + 1
         out_w = W - k + 1
 
-        out_data = [
-            [
-                [
-                    [0.0 for _ in range(out_w)]
-                    for _ in range(out_h)
-                ]
-                for _ in range(self.out_channels)
-            ]
-            for _ in range(B)
-        ]
+        out_data = cpp_backend.conv2d_forward(
+                x.data,
+                self.W.data
+            )
 
         for b in range(B):
             for oc in range(self.out_channels):
